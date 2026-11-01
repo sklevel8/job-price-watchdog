@@ -1,0 +1,204 @@
+{
+  "exhaustive": {
+    "nbHits": false,
+    "typo": false
+  },
+  "exhaustiveNbHits": false,
+  "exhaustiveTypo": false,
+  "hits": [
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "SergeyYudovskiy"
+        },
+        "title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Adentris (YC P25) Is Hiring"
+        },
+        "url": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "python"
+          ],
+          "value": "https://www.ycombinator.com/companies/adentris/jobs/ZpMXZ0C-founding-engineer-ai-rcm-healthcare-platform-typescript-<em>python</em>"
+        }
+      },
+      "_tags": [
+        "job",
+        "author_SergeyYudovskiy"
+      ],
+      "author": "SergeyYudovskiy",
+      "created_at": "2026-08-27T12:00:31Z",
+      "created_at_i": 1787832031,
+      "objectID": "49463361",
+      "title": "Adentris (YC P25) Is Hiring",
+      "updated_at": "2026-08-27T12:05:56Z",
+      "url": "https://www.ycombinator.com/companies/adentris/jobs/ZpMXZ0C-founding-engineer-ai-rcm-healthcare-platform-typescript-python"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "apetuskey"
+        },
+        "title": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "python"
+          ],
+          "value": "Reflex (YC W23) Is Hiring Software Engineers – <em>Python</em>"
+        },
+        "url": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "https://www.ycombinator.com/companies/reflex/jobs"
+        }
+      },
+      "_tags": [
+        "job",
+        "author_apetuskey"
+      ],
+      "author": "apetuskey",
+      "created_at": "2026-03-02T17:01:20Z",
+      "created_at_i": 1772470880,
+      "objectID": "47220666",
+      "title": "Reflex (YC W23) Is Hiring Software Engineers – Python",
+      "updated_at": "2026-03-05T23:39:52Z",
+      "url": "https://www.ycombinator.com/companies/reflex/jobs"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Jan-Truemetrics"
+        },
+        "title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Truemetrics (YC S23) Is Hiring"
+        },
+        "url": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "python"
+          ],
+          "value": "https://www.ycombinator.com/companies/truemetrics/jobs/1EHTSyT-<em>python</em>-software-engineer-analystics-and-algorithms"
+        }
+      },
+      "_tags": [
+        "job",
+        "author_Jan-Truemetrics"
+      ],
+      "author": "Jan-Truemetrics",
+      "created_at": "2025-12-08T07:00:33Z",
+      "created_at_i": 1765177233,
+      "objectID": "46189258",
+      "title": "Truemetrics (YC S23) Is Hiring",
+      "updated_at": "2026-03-05T23:09:57Z",
+      "url": "https://www.ycombinator.com/companies/truemetrics/jobs/1EHTSyT-python-software-engineer-analystics-and-algorithms"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "davidbuniat"
+        },
+        "title": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "python"
+          ],
+          "value": "Activeloop (YC S18) Is Hiring AI Search and <em>Python</em> Back End Engineers(Onsite,MV)"
+        },
+        "url": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "https://careers.activeloop.ai/"
+        }
+      },
+      "_tags": [
+        "job",
+        "author_davidbuniat"
+      ],
+      "author": "davidbuniat",
+      "created_at": "2025-07-11T21:01:21Z",
+      "created_at_i": 1752267681,
+      "objectID": "44536748",
+      "title": "Activeloop (YC S18) Is Hiring AI Search and Python Back End Engineers(Onsite,MV)",
+      "updated_at": "2025-07-11T21:04:12Z",
+      "url": "https://careers.activeloop.ai/"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "davidbuniat"
+        },
+        "title": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "python"
+          ],
+          "value": "Activeloop (YC S18) Is Hiring Senior <em>Python</em> Back End and AI Search Engineers"
+        },
+        "url": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "https://careers.activeloop.ai/"
+        }
+      },
+      "_tags": [
+        "job",
+        "author_davidbuniat"
+      ],
+      "author": "davidbuniat",
+      "created_at": "2025-03-25T17:00:36Z",
+      "created_at_i": 1742922036,
+      "objectID": "43473478",
+      "title": "Activeloop (YC S18) Is Hiring Senior Python Back End and AI Search Engineers",
+      "updated_at": "2025-03-25T17:04:03Z",
+      "url": "https://careers.activeloop.ai/"
+    }
+  ],
+  "hitsPerPage": 5,
+  "nbHits": 181,
+  "nbPages": 37,
+  "page": 0,
+  "params": "query=python&tags=job&hitsPerPage=5&advancedSyntax=true&analyticsTags=backend",
+  "processingTimeMS": 8,
+  "processingTimingsMS": {
+    "_request": {
+      "roundTrip": 23
+    },
+    "afterFetch": {
+      "merge": {
+        "mergeLoop": {
+          "prepareNextHit": 3,
+          "total": 3
+        },
+        "total": 3
+      },
+      "total": 3
+    },
+    "fetch": {
+      "query": 2,
+      "scanning": 1,
+      "total": 4
+    },
+    "total": 8
+  },
+  "query": "python",
+  "serverTimeMS": 8
+}

@@ -1,0 +1,48 @@
+[project]
+name = "job-price-watchdog"
+version = "1.0.0"
+description = "Serverless ETL watchdog for remote jobs and product prices, orchestrated by GitHub Actions."
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "beautifulsoup4>=4.13,<5",
+    "python-dotenv>=1.0,<2",
+    "PyYAML>=6.0.2,<7",
+    "requests>=2.32,<3",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 85
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RET", "C4", "RUF"]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "B008",   # function calls in argument defaults are intentional in tests
+    "RUF001", # typographic quotes/dashes are intentional: parsers must accept real-world text
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]

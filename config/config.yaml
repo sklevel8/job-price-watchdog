@@ -1,0 +1,83 @@
+# Watchdog configuration. Secrets are NEVER stored here -- only env var names.
+version: 1
+
+# SQLite history/state database. The GitHub Actions workflow restores this from cache.
+database: state/watchdog.db
+
+http:
+  timeout_seconds: 20
+  max_retries: 3
+  backoff_factor: 0.5
+  min_delay_seconds: 1.0
+  user_agent: "portfolio-watchdog/1.0 (+https://github.com/your-handle/job-price-watchdog)"
+
+notifications:
+  discord_webhook_env: DISCORD_WEBHOOK_URL
+  telegram_bot_token_env: TELEGRAM_BOT_TOKEN
+  telegram_chat_id_env: TELEGRAM_CHAT_ID
+  dry_run: false
+  alert_burst_warning_threshold: 25
+  request_timeout_seconds: 10
+
+rules:
+  # Public JSON API. Remote OK asks for attribution; every alert links to the listing.
+  - name: remote-tech-jobs
+    kind: job
+    enabled: true
+    source:
+      format: remoteok_json
+      url: https://remoteok.com/api
+    match:
+      keywords: [python, backend, platform, devops, sre, "site reliability"]
+      keyword_mode: any
+      exclude_keywords: [intern, internship, sales, recruiter]
+      include_description: false
+      remote_only: true
+      max_age_days: 14
+    bootstrap: alert
+
+  # HN's Algolia search already filters by "python"; keep client-side filters light.
+  - name: hn-who-is-hiring
+    kind: job
+    enabled: true
+    source:
+      format: hn_algolia_json
+      url: https://hn.algolia.com/api/v1/search_by_date
+      params:
+        tags: job
+        query: python
+        hitsPerPage: 50
+    match:
+      keywords: []
+      exclude_keywords: [intern, internship]
+      max_age_days: 90
+    bootstrap: alert
+
+  # Safe scraping sandbox (books.toscrape.com) used to demonstrate price ETL.
+  # Swap the URL/selectors for a real product page you are allowed to scrape.
+  - name: books-price-watch
+    kind: price
+    enabled: true
+    source:
+      format: books_toscrape
+      url: https://books.toscrape.com/catalogue/page-1.html
+      max_pages: 1
+    match:
+      max_price: 20.00
+      currency: GBP
+    bootstrap: alert
+
+  # Template for any static HTML product page. Disabled by default.
+  - name: example-generic-product
+    kind: price
+    enabled: false
+    source:
+      format: generic_html
+      url: https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html
+      item_selector: "div.product_main"
+      title_selector: "h1"
+      price_selector: ".price_color"
+    match:
+      max_price: 50.00
+      currency: GBP
+    bootstrap: suppress
