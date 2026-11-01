@@ -9,7 +9,7 @@ http:
   max_retries: 3
   backoff_factor: 0.5
   min_delay_seconds: 1.0
-  user_agent: "portfolio-watchdog/1.0 (+https://github.com/your-handle/job-price-watchdog)"
+  user_agent: "portfolio-watchdog/1.0 (+https://github.com/sklevel8/job-price-watchdog)"
 
 notifications:
   discord_webhook_env: DISCORD_WEBHOOK_URL
