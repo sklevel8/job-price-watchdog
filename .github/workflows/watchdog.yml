@@ -64,7 +64,7 @@ jobs:
 
       - name: Restore watchdog state
         id: restore-state
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: state
           # A unique key per run lets the post-run save always write a fresh
@@ -99,7 +99,7 @@ jobs:
 
       - name: Save watchdog state
         if: always() && !inputs.dry_run
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: state
           key: watchdog-state-${{ github.run_id }}-${{ github.run_attempt }}
