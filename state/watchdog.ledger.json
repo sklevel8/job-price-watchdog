@@ -1,0 +1,225 @@
+{
+  "version": 1,
+  "exported_at": "2026-11-06T02:17:56+00:00",
+  "alerts": [
+    {
+      "fingerprint": "66fa7b669a023e8a3e71bf9d09418a25d9b4a9e2c68649d30aa463f155853a39",
+      "rule": "ozow-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "992905a3fafd1bd0db1955ee3dee0792f9cdd1eac998133eebc401cd2dcff6b1",
+      "rule": "ozow-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "73d7c70399db367849afc7df7c296d4e2720151738563dd6a3c8cf63978b2530",
+      "rule": "ozow-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "c20e37762203ffdb8a915237b14343a001f7f7fd5e31e3f6c70f6f0e7f68eeb2",
+      "rule": "ozow-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "b3f8bdc7cb1edb18d9d46af1fc710c6d7707c92479bec4efb8a7534aaa35e0df",
+      "rule": "ozow-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "d71c217bcd74a714a945535c8fb58a1eb359739f04eb0f94e9a003c25c2362b9",
+      "rule": "ozow-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "ee5861f4dcd451c74bec09a7faf4f8366870cf8dbb0d393a0f46c55616a2b99c",
+      "rule": "ozow-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "a9f00972e1f47936052b379cbeb833f88b1396d4a978e410942aa85062016b92",
+      "rule": "ozow-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "3046e1445a120033cecc28482160b2a4417802aac4a2e3cc8797851b6a87541e",
+      "rule": "entersekt-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "3442cc4bc0d930423d3bb7e87a3af910830911ebdd74ebf35179eb24112c3216",
+      "rule": "entersekt-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "f204194f0441e21d2f0914ca8d64ef43b5246cff6ef9653f014d12f419288178",
+      "rule": "entersekt-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "c4ea95b4e818253a1fb3060f9d047cfa6c26d2324565fbd291ce830a569cabf7",
+      "rule": "luno-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "5719b65d7fece9cd993d84457b3aa89d05811e2391fa35dcfb1405309bb6bd53",
+      "rule": "luno-jobs",
+      "reason": "new_match",
+      "trigger_key": "new",
+      "channel": "console",
+      "status": "console",
+      "price": null,
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "340a98cd745c10ba37fb87c8bc4b870b50936f90f90ddf46b7e80e88bd6c5ee0",
+      "rule": "steam-price-watch",
+      "reason": "below_target",
+      "trigger_key": "below:800:799",
+      "channel": "console",
+      "status": "console",
+      "price": "800.0",
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "6fd8aa728af1a64482c93cd553fd386b1bde46e6d26fe07692cef62d6ce15463",
+      "rule": "steam-price-watch",
+      "reason": "below_target",
+      "trigger_key": "below:800:799",
+      "channel": "console",
+      "status": "console",
+      "price": "800.0",
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "be88b8b6acb3616571c5628f3ecc9df40caa267f9af85d00080e89eaee0ea829",
+      "rule": "steam-price-watch",
+      "reason": "below_target",
+      "trigger_key": "below:800:599",
+      "channel": "console",
+      "status": "console",
+      "price": "800.0",
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    },
+    {
+      "fingerprint": "a709468c3b7cfb0ca29634d7fe6dad67b55f8d018a77acd4309a611ace8be5d4",
+      "rule": "steam-price-watch",
+      "reason": "below_target",
+      "trigger_key": "below:800:230",
+      "channel": "console",
+      "status": "console",
+      "price": "800.0",
+      "sent_at": "2026-11-06T02:17:35+00:00",
+      "error": null
+    }
+  ],
+  "price_minima": [
+    {
+      "fingerprint": "340a98cd745c10ba37fb87c8bc4b870b50936f90f90ddf46b7e80e88bd6c5ee0",
+      "price": "799.00",
+      "currency": "ZAR",
+      "observed_at": "2026-11-06T02:17:35+00:00"
+    },
+    {
+      "fingerprint": "6fd8aa728af1a64482c93cd553fd386b1bde46e6d26fe07692cef62d6ce15463",
+      "price": "799.00",
+      "currency": "ZAR",
+      "observed_at": "2026-11-06T02:17:35+00:00"
+    },
+    {
+      "fingerprint": "f871a211db5c0368bebde3aa0e220e1bfaca6897f47f0ed4cb51919652b3dae4",
+      "price": "849.00",
+      "currency": "ZAR",
+      "observed_at": "2026-11-06T02:17:35+00:00"
+    },
+    {
+      "fingerprint": "be88b8b6acb3616571c5628f3ecc9df40caa267f9af85d00080e89eaee0ea829",
+      "price": "599.00",
+      "currency": "ZAR",
+      "observed_at": "2026-11-06T02:17:35+00:00"
+    },
+    {
+      "fingerprint": "a709468c3b7cfb0ca29634d7fe6dad67b55f8d018a77acd4309a611ace8be5d4",
+      "price": "230.00",
+      "currency": "ZAR",
+      "observed_at": "2026-11-06T02:17:35+00:00"
+    }
+  ]
+}

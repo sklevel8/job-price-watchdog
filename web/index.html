@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#060b14" />
+  <meta name="description" content="Job & Price Watchdog — a serverless ETL watchdog that polls job boards and store prices, deduplicates listings and alerts via Telegram." />
+  <title>Watchdog — job &amp; price monitoring</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="theme.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="shell topbar__inner">
+      <a class="brand" href="./" aria-label="Watchdog home">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 4.5c3.3 0 6 2.6 6 5.9v4.1l1.6 2.4H4.4L6 14.5v-4.1c0-3.3 2.7-5.9 6-5.9Z" stroke-linejoin="round"/>
+            <path d="M9.8 19.2a2.4 2.4 0 0 0 4.4 0" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand__name">Watch<span>dog</span></span>
+        <span class="brand__tag">jobs · prices</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#overview" class="is-active">Overview</a>
+        <a href="#rules">Rules</a>
+        <a href="#feed">Feed</a>
+        <span class="nav__divider" aria-hidden="true"></span>
+        <a href="https://github.com/sklevel8/job-price-watchdog" target="_blank" rel="noopener">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="shell page">
+    <section class="hero" id="overview">
+      <div>
+        <div class="eyebrow"><span class="eyebrow__dot"></span> Last run 06 Nov 2026 · 04:17 SAST</div>
+        <h1>Watch the market <span>while you sleep.</span></h1>
+        <p class="lede">
+          A serverless ETL watchdog polls job boards and store catalogues, normalises every
+          listing, deduplicates against persisted state and pushes only genuinely new matches to
+          Telegram. No cron server, no database bills on idle.
+        </p>
+        <div class="hero-pills">
+          <span class="badge badge--ok"><span class="dot dot--pulse"></span> last run ok</span>
+          <span class="badge">4 rules</span>
+          <span class="badge">19 fetched</span>
+          <span class="badge">11.3 s</span>
+        </div>
+      </div>
+
+      <div class="card card--accent run-card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Latest run</h2>
+            <p class="card__hint mono" id="runId">20261106T021744Z-a695b048</p>
+          </div>
+          <span class="badge badge--ok">ok</span>
+        </div>
+        <div class="run-grid">
+          <div><span class="stat__label">Fetched</span><span class="stat__value" id="kFetched">19</span></div>
+          <div><span class="stat__label">Matched</span><span class="stat__value" id="kMatched">18</span></div>
+          <div><span class="stat__label">New</span><span class="stat__value" id="kNew">0</span></div>
+          <div><span class="stat__label">Alerts</span><span class="stat__value" id="kAlerts">0</span></div>
+        </div>
+        <div class="run-foot">
+          <span class="dim tiny">Delivery</span>
+          <span class="mono tiny">Telegram · 0 sent</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <div>
+          <h2 class="h2">Price watch</h2>
+          <p class="section__desc">Tracked Store prices in ZAR. Drops of more than 10% trigger an alert.</p>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Price window">
+          <button class="tab" role="tab" aria-selected="false" data-window="7">7d</button>
+          <button class="tab" role="tab" aria-selected="true" data-window="30">30d</button>
+          <button class="tab" role="tab" aria-selected="false" data-window="90">90d</button>
+        </div>
+      </div>
+
+      <div class="grid grid--sidebar">
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <h3 class="card__title">Tracked catalogue</h3>
+              <p class="card__hint" id="chartHint">Lowest observed price per day</p>
+            </div>
+            <div class="legend" id="legend"></div>
+          </div>
+          <div class="chart-wrap">
+            <svg id="priceChart" class="chart" viewBox="0 0 720 280" role="img" aria-label="Price history chart"></svg>
+          </div>
+        </div>
+
+        <aside class="card">
+          <div class="card__head">
+            <div>
+              <h3 class="card__title">Price moves</h3>
+              <p class="card__hint">vs. 30-day median</p>
+            </div>
+          </div>
+          <ul class="list" id="priceMoves"></ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="rules">
+      <div class="section__head">
+        <div>
+          <h2 class="h2">Watch rules</h2>
+          <p class="section__desc">Each rule owns its own fetcher and matcher. Failures are isolated per rule.</p>
+        </div>
+        <span class="badge">run duration 11.34 s</span>
+      </div>
+
+      <div class="card card--flush">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Rule</th><th>Status</th><th class="num">Fetched</th><th class="num">Matched</th>
+                <th class="num">New</th><th class="num">Alerts</th><th>Duration</th><th class="num">Errors</th>
+              </tr>
+            </thead>
+            <tbody id="ruleRows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid grid--3" style="margin-top:16px">
+        <div class="card">
+          <span class="stat__label">Slowest rule</span>
+          <p class="h3" style="margin-top:6px" id="slowest">steam-price-watch</p>
+          <p class="tiny dim" id="slowestMeta">5.8 s · 51% of the run</p>
+          <div class="meter"><span id="slowestBar" style="width:51%"></span></div>
+        </div>
+        <div class="card">
+          <span class="stat__label">Deduplication</span>
+          <p class="h3" style="margin-top:6px">100% suppressed</p>
+          <p class="tiny dim">18 matches resolved against state, 0 re-alerted.</p>
+          <div class="meter"><span style="width:100%"></span></div>
+        </div>
+        <div class="card">
+          <span class="stat__label">Next scheduled run</span>
+          <p class="h3" style="margin-top:6px">06:00 SAST</p>
+          <p class="tiny dim">GitHub Actions cron · <code class="mono">0 4 * * *</code></p>
+          <div class="meter meter--muted"><span style="width:72%"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="feed">
+      <div class="section__head">
+        <div>
+          <h2 class="h2">Alert feed</h2>
+          <p class="section__desc">Simulated deliveries from the last three runs, newest first.</p>
+        </div>
+        <div class="row">
+          <div class="tabs" role="tablist" aria-label="Feed filter">
+            <button class="tab" role="tab" aria-selected="true" data-feed="all">All</button>
+            <button class="tab" role="tab" aria-selected="false" data-feed="job">Jobs</button>
+            <button class="tab" role="tab" aria-selected="false" data-feed="price">Prices</button>
+          </div>
+          <button class="btn btn--sm btn--ghost" type="button" id="simulateBtn">Simulate a new match</button>
+        </div>
+      </div>
+
+      <div class="card card--flush">
+        <ul class="feed" id="feedList"></ul>
+        <div id="feedEmpty" class="empty"><strong>Nothing in this filter</strong><span>Switch filters or simulate a match.</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="grid grid--3">
+        <article class="card"><h3 class="h3">Fetch</h3><p class="muted small">Each source is scraped with a per-rule timeout and a stable cursor, so a slow board cannot starve the others.</p></article>
+        <article class="card"><h3 class="h3">Normalise &amp; diff</h3><p class="muted small">Fingerprints (company + title + location, or product + edition) are diffed against persisted state to suppress repeats.</p></article>
+        <article class="card"><h3 class="h3">Notify</h3><p class="muted small">Only net-new matches are formatted and dispatched. Delivery failures are retried and recorded, never silently dropped.</p></article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <span>Built by Sipho Makubalo · serverless Python ETL, Telegram delivery.</span>
+        <div class="row row--tight">
+          <a href="https://github.com/sklevel8/job-price-watchdog" target="_blank" rel="noopener">Source</a>
+          <span class="dim">·</span>
+          <a href="https://sklevel8-portfolio.netlify.app" target="_blank" rel="noopener">All projects</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

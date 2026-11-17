@@ -339,6 +339,12 @@ class Database:
     def count_listings(self) -> int:
         return int(self.conn.execute("SELECT COUNT(*) FROM listings").fetchone()[0])
 
+    def distinct_sources(self) -> list[str]:
+        rows = self.conn.execute(
+            "SELECT source, COUNT(*) AS total FROM listings GROUP BY source ORDER BY total DESC"
+        ).fetchall()
+        return [str(row["source"]) for row in rows]
+
     # -- prices ------------------------------------------------------------
 
     def record_price(
@@ -546,6 +552,160 @@ class Database:
             "last_run": dict(last_run) if last_run else None,
         }
 
+    # -- read models for the dashboard/API --------------------------------
+
+    def list_runs(self, *, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT run_id, started_at, finished_at, status, totals_json, error "
+            "FROM runs ORDER BY started_at DESC, rowid DESC LIMIT ? OFFSET ?",
+            (limit, offset),
+        ).fetchall()
+        return [_run_dict(row) for row in rows]
+
+    def count_runs(self) -> int:
+        return int(self.conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0])
+
+    def get_run(self, run_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT run_id, started_at, finished_at, status, totals_json, error "
+            "FROM runs WHERE run_id = ?",
+            (run_id,),
+        ).fetchone()
+        return _run_dict(row) if row is not None else None
+
+    def list_rule_states(self) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT rule, first_run_at, last_run_at, run_count, last_status, first_success_at "
+            "FROM rule_state ORDER BY last_run_at DESC"
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def list_listings(
+        self,
+        *,
+        kind: str | None = None,
+        source: str | None = None,
+        query: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[dict[str, Any]], int]:
+        where: list[str] = []
+        params: list[Any] = []
+        if kind:
+            where.append("kind = ?")
+            params.append(kind)
+        if source:
+            where.append("source = ?")
+            params.append(source)
+        if query:
+            pattern = _like_pattern(query)
+            where.append(
+                "(title LIKE ? ESCAPE '\\' OR company LIKE ? ESCAPE '\\' "
+                "OR description LIKE ? ESCAPE '\\')"
+            )
+            params.extend((pattern, pattern, pattern))
+        clause = f" WHERE {' AND '.join(where)}" if where else ""
+        total = int(
+            self.conn.execute(f"SELECT COUNT(*) FROM listings{clause}", params).fetchone()[0]
+        )
+        rows = self.conn.execute(
+            f"SELECT * FROM listings{clause} "
+            "ORDER BY last_seen_at DESC, rowid DESC LIMIT ? OFFSET ?",
+            [*params, limit, offset],
+        ).fetchall()
+        return [_listing_dict(row) for row in rows], total
+
+    def get_listing_detail(self, fingerprint: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM listings WHERE fingerprint = ?", (fingerprint,)
+        ).fetchone()
+        if row is None:
+            return None
+        detail = _listing_dict(row)
+        stats = self.get_price_stats(fingerprint)
+        detail["price_stats"] = {
+            "latest": stats.latest,
+            "previous": stats.previous,
+            "minimum": stats.minimum,
+            "observations": stats.observations,
+        }
+        detail["price_history"] = self.price_history(fingerprint)
+        detail["alerts"] = [
+            dict(alert)
+            for alert in self.conn.execute(
+                "SELECT id, rule, reason, trigger_key, channel, status, price, sent_at, error "
+                "FROM alerts WHERE fingerprint = ? ORDER BY id DESC LIMIT 50",
+                (fingerprint,),
+            ).fetchall()
+        ]
+        return detail
+
+    def price_history(self, fingerprint: str, *, limit: int = 200) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT price, currency, observed_at FROM price_history WHERE fingerprint = ? "
+            "ORDER BY observed_at DESC, id DESC LIMIT ?",
+            (fingerprint, limit),
+        ).fetchall()
+        return [
+            {"price": row["price"], "currency": row["currency"], "observed_at": row["observed_at"]}
+            for row in reversed(rows)
+        ]
+
+    def list_alerts(
+        self,
+        *,
+        status: str | None = None,
+        rule: str | None = None,
+        channel: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[dict[str, Any]], int]:
+        where: list[str] = []
+        params: list[Any] = []
+        if status:
+            where.append("a.status = ?")
+            params.append(status)
+        if rule:
+            where.append("a.rule = ?")
+            params.append(rule)
+        if channel:
+            where.append("a.channel = ?")
+            params.append(channel)
+        clause = f" WHERE {' AND '.join(where)}" if where else ""
+        total = int(
+            self.conn.execute(f"SELECT COUNT(*) FROM alerts a{clause}", params).fetchone()[0]
+        )
+        rows = self.conn.execute(
+            "SELECT a.id, a.fingerprint, a.rule, a.reason, a.trigger_key, a.channel, "
+            "a.status, a.price, a.sent_at, a.error, l.title AS listing_title, "
+            "l.url AS listing_url, l.kind AS listing_kind, l.company AS listing_company, "
+            "l.source AS listing_source "
+            f"FROM alerts a LEFT JOIN listings l ON l.fingerprint = a.fingerprint{clause} "
+            "ORDER BY a.sent_at DESC, a.id DESC LIMIT ? OFFSET ?",
+            [*params, limit, offset],
+        ).fetchall()
+        return [dict(row) for row in rows], total
+
+    def recent_price_watch(self, *, limit: int = 5) -> list[dict[str, Any]]:
+        """Price listings with their latest, minimum, and observation count."""
+
+        rows = self.conn.execute(
+            "SELECT * FROM listings WHERE kind = 'price' "
+            "ORDER BY last_seen_at DESC, rowid DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        items: list[dict[str, Any]] = []
+        for row in rows:
+            stats = self.get_price_stats(row["fingerprint"])
+            item = _listing_dict(row)
+            item["price_stats"] = {
+                "latest": stats.latest,
+                "minimum": stats.minimum,
+                "observations": stats.observations,
+            }
+            items.append(item)
+        return items
+
     # -- portable ledger ---------------------------------------------------
 
     def export_ledger(self, path: str | Path | None = None, *, now: datetime | None = None) -> Path:
@@ -671,6 +831,51 @@ class Database:
                     "observed_at": row["observed_at"],
                 }
         return list(minima.values())
+
+
+def _run_dict(row: sqlite3.Row) -> dict[str, Any]:
+    try:
+        totals = json.loads(row["totals_json"] or "{}")
+    except (TypeError, json.JSONDecodeError):
+        totals = {}
+    return {
+        "run_id": row["run_id"],
+        "started_at": row["started_at"],
+        "finished_at": row["finished_at"],
+        "status": row["status"],
+        "totals": totals if isinstance(totals, dict) else {},
+        "error": row["error"],
+    }
+
+
+def _listing_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "fingerprint": row["fingerprint"],
+        "kind": row["kind"],
+        "source": row["source"],
+        "external_id": row["external_id"],
+        "title": row["title"],
+        "company": row["company"],
+        "location": row["location"],
+        "remote": None if row["remote"] is None else bool(row["remote"]),
+        "url": row["url"],
+        "description": row["description"],
+        "tags": json.loads(row["tags_json"] or "[]"),
+        "posted_at": row["posted_at"],
+        "price": row["price"],
+        "currency": row["currency"],
+        "salary_min": row["salary_min"],
+        "salary_max": row["salary_max"],
+        "salary_currency": row["salary_currency"],
+        "salary_period": row["salary_period"],
+        "first_seen_at": row["first_seen_at"],
+        "last_seen_at": row["last_seen_at"],
+    }
+
+
+def _like_pattern(value: str) -> str:
+    escaped = value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
 
 
 def _row_to_listing(row: sqlite3.Row) -> Listing:

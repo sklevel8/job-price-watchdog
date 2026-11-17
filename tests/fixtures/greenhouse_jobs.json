@@ -1,0 +1,31 @@
+{
+  "jobs": [
+    {
+      "id": 8011235003,
+      "internal_job_id": 5892712003,
+      "title": "Senior Software Engineer",
+      "company_name": "Ozow",
+      "absolute_url": "https://job-boards.greenhouse.io/ozow/jobs/8011235003",
+      "location": {"name": "Cape Town"},
+      "first_published": "2026-10-07T08:42:54-04:00",
+      "updated_at": "2026-10-27T07:24:13-04:00",
+      "requisition_id": "574"
+    },
+    {
+      "id": 6008895004,
+      "internal_job_id": 6008895004,
+      "title": "Systems Integration Engineer",
+      "company_name": "Entersekt",
+      "absolute_url": "https://job-boards.greenhouse.io/entersekt/jobs/6008895004",
+      "location": {"name": "Fully Remote, South Africa"},
+      "first_published": "2026-10-23T06:06:06-04:00",
+      "updated_at": "2026-10-23T06:06:06-04:00",
+      "requisition_id": null
+    },
+    {
+      "id": 999,
+      "title": "",
+      "absolute_url": ""
+    }
+  ]
+}

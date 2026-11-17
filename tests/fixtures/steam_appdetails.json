@@ -1,0 +1,39 @@
+{
+  "1086940": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "steam_appid": 1086940,
+      "name": "Baldur's Gate 3",
+      "short_description": "A <b>story-rich</b> RPG set in the world of D&D.",
+      "is_free": false,
+      "price_overview": {
+        "currency": "USD",
+        "initial": 5999,
+        "final": 4799,
+        "discount_percent": 20,
+        "final_formatted": "$47.99"
+      }
+    }
+  },
+  "1145360": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "steam_appid": 1145360,
+      "name": "Hades",
+      "short_description": "A rogue-lite dungeon crawler.",
+      "is_free": false,
+      "price_overview": {
+        "currency": "USD",
+        "initial": 2499,
+        "final": 2499,
+        "discount_percent": 0,
+        "final_formatted": "$24.99"
+      }
+    }
+  },
+  "999999": {
+    "success": false
+  }
+}

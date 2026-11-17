@@ -15,6 +15,7 @@ import logging
 import os
 import sys
 import tempfile
+import time
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -108,12 +109,12 @@ def configure_logging(level: str, log_format: str) -> None:
     if log_format == "json":
         handler.setFormatter(JsonFormatter())
     else:
-        handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s %(levelname)-8s %(name)s: %(message)s",
-                datefmt="%Y-%m-%dT%H:%M:%SZ",
-            )
+        formatter = logging.Formatter(
+            "%(asctime)s %(levelname)-8s %(name)s: %(message)s",
+            datefmt="%Y-%m-%dT%H:%M:%SZ",
         )
+        formatter.converter = time.gmtime
+        handler.setFormatter(formatter)
     root = logging.getLogger()
     root.handlers.clear()
     root.addHandler(handler)

@@ -16,6 +16,9 @@ coverage.xml
 !.env.example
 
 # Runtime data (SQLite state DB is restored via Actions cache)
+config/*.bak
+config/*.tmp
+config/*.validate
 state/*.db
 state/*.db-wal
 state/*.db-shm

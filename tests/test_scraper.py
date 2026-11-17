@@ -18,8 +18,10 @@ from scraper import (
     fetch_listings,
     parse_books_catalog_html,
     parse_generic_html_page,
+    parse_greenhouse_json,
     parse_hn_algolia_json,
     parse_remoteok_json,
+    parse_steam_appdetails_json,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -232,6 +234,30 @@ def test_hn_invalid_payload() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Greenhouse job boards
+# ---------------------------------------------------------------------------
+
+
+def test_greenhouse_parses_south_african_jobs() -> None:
+    listings = parse_greenhouse_json(fixture_bytes("greenhouse_jobs.json"))
+    assert len(listings) == 2
+    first, second = listings
+    assert first.title == "Senior Software Engineer"
+    assert first.company == "Ozow"
+    assert first.location == "Cape Town"
+    assert first.url == "https://job-boards.greenhouse.io/ozow/jobs/8011235003"
+    assert first.posted_at is not None
+    assert first.remote is None
+    assert second.remote is True
+    assert second.location == "Fully Remote, South Africa"
+
+
+def test_greenhouse_empty_board_is_parse_error() -> None:
+    with pytest.raises(ParseError, match="no usable jobs"):
+        parse_greenhouse_json(b'{"jobs": []}')
+
+
+# ---------------------------------------------------------------------------
 # Books to Scrape
 # ---------------------------------------------------------------------------
 
@@ -265,6 +291,30 @@ def test_books_mojibake_price_is_normalized() -> None:
 def test_books_no_cards_is_parse_error() -> None:
     with pytest.raises(ParseError, match="no article"):
         parse_books_catalog_html(b"<html><body>maintenance</body></html>", "https://example.com")
+
+
+# ---------------------------------------------------------------------------
+# Steam app details
+# ---------------------------------------------------------------------------
+
+
+def test_steam_appdetails_parses_prices() -> None:
+    listings = parse_steam_appdetails_json(
+        fixture_bytes("steam_appdetails.json"),
+        default_currency="USD",
+    )
+    assert len(listings) == 2
+    assert listings[0].title == "Baldur's Gate 3"
+    assert listings[0].price == Decimal("47.99")
+    assert listings[0].currency == "USD"
+    assert listings[0].url == "https://store.steampowered.com/app/1086940/"
+    assert listings[0].raw["discount_percent"] == 20
+    assert listings[1].price == Decimal("24.99")
+
+
+def test_steam_appdetails_without_games_is_parse_error() -> None:
+    with pytest.raises(ParseError, match="no games"):
+        parse_steam_appdetails_json(b'{"999999": {"success": false}}')
 
 
 # ---------------------------------------------------------------------------
@@ -381,6 +431,35 @@ def test_fetch_books_paginates() -> None:
     listings = fetch_listings(source, http_client(session))
     assert len(listings) == 40
     assert session.calls[1]["url"] == "https://books.toscrape.com/catalogue/page-2.html"
+
+
+def test_fetch_greenhouse_dispatch() -> None:
+    source = SourceSettings(
+        format="greenhouse_json",
+        url="https://boards-api.greenhouse.io/v1/boards/ozow/jobs",
+    )
+    session = FakeSession([FakeResponse(fixture_bytes("greenhouse_jobs.json"), url=source.url)])
+    listings = fetch_listings(source, http_client(session))
+    assert len(listings) == 2
+    assert session.calls[0]["url"] == source.url
+
+
+def test_fetch_steam_requests_each_app_id() -> None:
+    source = SourceSettings(
+        format="steam_appdetails",
+        url="https://store.steampowered.com/api/appdetails",
+        params={"appids": "1086940,1145360", "cc": "us"},
+    )
+    session = FakeSession(
+        [
+            FakeResponse(fixture_bytes("steam_appdetails.json"), url=source.url),
+            FakeResponse(fixture_bytes("steam_appdetails.json"), url=source.url),
+        ]
+    )
+    listings = fetch_listings(source, http_client(session))
+    assert len(listings) == 4
+    assert [call["params"]["appids"] for call in session.calls] == ["1086940", "1145360"]
+    assert session.calls[0]["params"]["cc"] == "us"
 
 
 def test_fetch_generic_dispatch() -> None:

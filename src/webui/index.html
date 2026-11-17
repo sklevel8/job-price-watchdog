@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-layout="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f2efe8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f0e0c" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Watchdog dashboard: inspect job and product-price runs, listings, price history, and the alert ledger, edit configuration, and trigger dry or live pipeline runs.">
+  <title>Watchdog — Job &amp; Price Monitor</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 3.5 27 8v7.4c0 6.3-4.3 10.6-11 13.1-6.7-2.5-11-6.8-11-13.1V8L16 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M10.5 16.5h3l1.7-4.2 2.4 7.5 1.6-3.3h2.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>Watchdog</strong>
+          <small>jobs + prices</small>
+        </span>
+      </div>
+
+      <nav class="nav" aria-label="Primary navigation">
+        <p class="nav-section">Monitor</p>
+        <button class="nav-item is-active" type="button" data-view="overview">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/></svg>
+          <span>Overview</span>
+        </button>
+        <button class="nav-item" type="button" data-view="runs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 5v5.6l4 2.4-1 1.7-5-3V7h2Z"/></svg>
+          <span>Runs</span>
+        </button>
+        <button class="nav-item" type="button" data-view="listings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v3H4V5Zm0 5.5h16v3H4v-3ZM4 16h10v3H4v-3Z"/></svg>
+          <span>Listings</span>
+        </button>
+        <button class="nav-item" type="button" data-view="alerts">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6v3.6L4 16v2h16v-2l-2-4.4V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3Z"/></svg>
+          <span>Alerts</span>
+        </button>
+        <p class="nav-section">Manage</p>
+        <button class="nav-item" type="button" data-view="config">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.4 16.6-4.6-4.6 4.6-4.6L8 6 2 12l6 6 1.4-1.4Zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4Z"/></svg>
+          <span>Configuration</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="connection">
+          <span class="dot" id="conn-dot" aria-hidden="true"></span>
+          <span id="conn-status">Connecting…</span>
+        </div>
+        <div class="sidebar-row">
+          <span class="version">v1.0.0</span>
+          <button class="icon-btn" type="button" id="theme-toggle" aria-label="Toggle colour theme" title="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0-15h1v3h-2V2h1Zm0 17h1v3h-2v-3h1ZM2 11h3v2H2v-2Zm17 0h3v2h-3v-2ZM4.2 5.6l2.1 2.1L4.9 9.1 2.8 7l1.4-1.4Zm14.3 11.3 2.1 2.1-1.4 1.4-2.1-2.1 1.4-1.4ZM4.9 18.4l1.4-1.4 2.1 2.1-1.4 1.4-2.1-2.1ZM17.1 5.6l1.4-1.4 2.1 2.1-1.4 1.4-2.1-2.1Z"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <header class="topbar">
+        <div class="topbar-copy">
+          <p class="eyebrow" id="view-eyebrow">Operations</p>
+          <h1 id="view-title">Overview</h1>
+          <p class="subtitle" id="view-subtitle">Live state of your job and price watchdog.</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="layout-switch" id="layout-switch" role="group" aria-label="Layout preview">
+            <button class="layout-btn" type="button" data-layout="auto" aria-pressed="true" title="Follow the window size" aria-label="Automatic layout">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4V5Zm2 2v6h12V7H6Zm-2 10h16v2H4v-2Z"/></svg>
+            </button>
+            <button class="layout-btn" type="button" data-layout="desktop" aria-pressed="false" title="Desktop layout" aria-label="Desktop layout">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v12H3V4Zm2 2v8h14V6H5Zm4 12h6v2H9v-2Z"/></svg>
+            </button>
+            <button class="layout-btn" type="button" data-layout="mobile" aria-pressed="false" title="Mobile layout in a phone-width frame" aria-label="Mobile layout">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm0 2v14h8V4H8Zm3 15h2v1h-2v-1Z"/></svg>
+            </button>
+          </div>
+          <button class="btn ghost" type="button" id="refresh-btn" title="Reload this view">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.7 6.3A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.3L13 11h7V4l-2.3 2.3Z"/></svg>
+            Refresh
+          </button>
+          <button class="btn secondary" type="button" id="dry-run-btn" title="Preview against live sources without writing state or sending alerts">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2v2Zm0-4h-2V7h2v6Z"/></svg>
+            Dry run
+          </button>
+          <button class="btn primary" type="button" id="live-run-btn" title="Run the pipeline and deliver alerts">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z"/></svg>
+            Run live
+          </button>
+        </div>
+      </header>
+
+      <div class="banner error" id="global-error" role="alert" hidden></div>
+
+      <section class="view" id="view-overview">
+        <div class="stat-grid">
+          <article class="stat-card accent-teal">
+            <div class="stat-top"><span class="stat-label">Tracked listings</span><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v3H4V5Zm0 5.5h16v3H4v-3ZM4 16h10v3H4v-3Z"/></svg></span></div>
+            <div class="stat-value" id="stat-listings">—</div>
+            <div class="stat-sub" id="stat-listings-sub">jobs and products in SQLite</div>
+          </article>
+          <article class="stat-card accent-blue">
+            <div class="stat-top"><span class="stat-label">Price observations</span><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16v2H4v-2Zm1.6-3.3 4.1-4.1 3 3L18.4 8 20 9.4l-7.3 7.3-3-3-2.7 2.7-1.4-1.7Z"/></svg></span></div>
+            <div class="stat-value" id="stat-prices">—</div>
+            <div class="stat-sub" id="stat-prices-sub">exact decimal history</div>
+          </article>
+          <article class="stat-card accent-amber">
+            <div class="stat-top"><span class="stat-label">Alerts delivered</span><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a6 6 0 0 0-6 6v3.6L4 16v2h16v-2l-2-4.4V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3Z"/></svg></span></div>
+            <div class="stat-value" id="stat-alerts">—</div>
+            <div class="stat-sub" id="stat-alerts-sub">sent to Discord, Telegram, or console</div>
+          </article>
+          <article class="stat-card accent-violet">
+            <div class="stat-top"><span class="stat-label">Last run</span><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 5v5.6l4 2.4-1 1.7-5-3V7h2Z"/></svg></span></div>
+            <div class="stat-value" id="stat-last-run">—</div>
+            <div class="stat-sub" id="stat-last-run-sub">no runs recorded yet</div>
+          </article>
+        </div>
+
+        <div class="grid-2">
+          <article class="panel">
+            <div class="panel-head">
+              <div><h2>Watch rules</h2><p>Rules loaded from <code>config.yaml</code>.</p></div>
+              <span class="badge neutral" id="rules-count">—</span>
+            </div>
+            <div class="rule-list" id="rules-list"><div class="empty">Loading rules…</div></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div><h2>Delivery &amp; run state</h2><p>Where alerts will go, and the current pipeline job.</p></div>
+            </div>
+            <div class="channel-list" id="channels-list"><div class="empty">Loading channels…</div></div>
+            <div class="run-callout" id="run-state"></div>
+            <div class="quick-links">
+              <button class="link-btn" type="button" data-view="config">Edit configuration →</button>
+              <button class="link-btn" type="button" data-view="alerts">Review alerts →</button>
+            </div>
+          </article>
+        </div>
+
+        <div class="grid-2">
+          <article class="panel">
+            <div class="panel-head">
+              <div><h2>Recent runs</h2><p>The five latest pipeline executions.</p></div>
+              <button class="link-btn" type="button" data-view="runs">View all →</button>
+            </div>
+            <div id="overview-runs" class="table-wrap"><div class="empty">Loading runs…</div></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head">
+              <div><h2>Recent alerts</h2><p>Latest deliveries and retries.</p></div>
+              <button class="link-btn" type="button" data-view="alerts">View all →</button>
+            </div>
+            <div id="overview-alerts" class="table-wrap"><div class="empty">Loading alerts…</div></div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div><h2>Price watch</h2><p>Current and lowest recorded prices for tracked products.</p></div>
+            <button class="link-btn" type="button" data-view="listings">Browse listings →</button>
+          </div>
+          <div class="price-watch" id="price-watch"><div class="empty">Loading price history…</div></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-runs" hidden>
+        <article class="panel">
+          <div class="panel-head">
+            <div><h2>Run history</h2><p>Every execution recorded in SQLite, newest first.</p></div>
+            <button class="btn ghost small" type="button" data-action="refresh-runs">Refresh</button>
+          </div>
+          <div class="table-wrap" id="runs-table"><div class="empty">Loading runs…</div></div>
+          <div class="pager" id="runs-pager"></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-listings" hidden>
+        <article class="panel">
+          <div class="panel-head">
+            <div><h2>Listings</h2><p>Normalized jobs and products stored by the ETL.</p></div>
+            <button class="btn ghost small" type="button" data-action="refresh-listings">Refresh</button>
+          </div>
+          <div class="toolbar">
+            <label class="field search">
+              <span class="sr-only">Search listings</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm5.2 9.8 1.4-1.4L21 18.2 19.6 19.6l-4.4-4.4Z"/></svg>
+              <input type="search" id="listing-search" placeholder="Search title, company, description…" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Kind</span>
+              <select id="listing-kind">
+                <option value="">All kinds</option>
+                <option value="job">Jobs</option>
+                <option value="price">Products</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Source</span>
+              <select id="listing-source"><option value="">All sources</option></select>
+            </label>
+          </div>
+          <div class="table-wrap" id="listings-table"><div class="empty">Loading listings…</div></div>
+          <div class="pager" id="listings-pager"></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-alerts" hidden>
+        <article class="panel">
+          <div class="panel-head">
+            <div><h2>Alert ledger</h2><p>Idempotent per rule, trigger, and channel — failures retry automatically.</p></div>
+            <button class="btn ghost small" type="button" data-action="refresh-alerts">Refresh</button>
+          </div>
+          <div class="toolbar">
+            <label class="field">
+              <span>Status</span>
+              <select id="alert-status">
+                <option value="">All statuses</option>
+                <option value="sent">Sent</option>
+                <option value="console">Console</option>
+                <option value="failed">Failed</option>
+                <option value="suppressed">Suppressed</option>
+                <option value="dry_run">Dry run</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Rule</span>
+              <select id="alert-rule"><option value="">All rules</option></select>
+            </label>
+            <label class="field">
+              <span>Channel</span>
+              <select id="alert-channel">
+                <option value="">All channels</option>
+                <option value="discord">Discord</option>
+                <option value="telegram">Telegram</option>
+                <option value="console">Console</option>
+                <option value="bootstrap">Bootstrap</option>
+              </select>
+            </label>
+          </div>
+          <div class="table-wrap" id="alerts-table"><div class="empty">Loading alerts…</div></div>
+          <div class="pager" id="alerts-pager"></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-config" hidden>
+        <div class="config-grid">
+          <article class="panel config-editor">
+            <div class="panel-head">
+              <div><h2>config.yaml</h2><p id="config-path" class="mono">loading…</p></div>
+              <span class="badge neutral" id="config-badge">—</span>
+            </div>
+            <textarea id="config-editor" spellcheck="false" aria-label="YAML configuration"></textarea>
+            <div class="editor-actions">
+              <button class="btn secondary" type="button" id="config-validate">Validate</button>
+              <button class="btn primary" type="button" id="config-save">Save config</button>
+              <button class="btn ghost" type="button" id="config-reload">Reload</button>
+              <span class="dirty" id="config-dirty" hidden>Unsaved changes</span>
+            </div>
+            <div class="banner error" id="config-error" role="alert" hidden></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head">
+              <div><h2>Resolved configuration</h2><p>What the pipeline will use right now.</p></div>
+            </div>
+            <div id="config-summary"><div class="empty">Save or reload to inspect the configuration.</div></div>
+            <div class="config-tip">
+              <strong>Safe editing.</strong> Saves are validated with the same strict loader as the
+              CLI, written atomically, and a <code>.bak</code> copy is kept.
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
+    <header class="drawer-head">
+      <div><p class="eyebrow" id="drawer-eyebrow">Details</p><h2 id="drawer-title">—</h2></div>
+      <button class="icon-btn" type="button" id="drawer-close" aria-label="Close details">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg>
+      </button>
+    </header>
+    <div class="drawer-body" id="drawer-body"></div>
+  </aside>
+
+  <div class="modal-backdrop" id="run-backdrop" hidden></div>
+  <section class="modal run-modal" id="run-modal" role="dialog" aria-modal="true" aria-labelledby="run-title" hidden>
+    <header class="modal-head">
+      <div><p class="eyebrow" id="run-eyebrow">Pipeline run</p><h2 id="run-title">Starting…</h2></div>
+      <button class="icon-btn" type="button" id="run-close" aria-label="Close run viewer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg>
+      </button>
+    </header>
+    <div class="run-meta" id="run-meta"></div>
+    <div class="run-summary" id="run-summary"></div>
+    <div class="log-wrap">
+      <div class="log-head"><span>Live log</span><span class="live-dot" id="run-live-dot"></span></div>
+      <pre id="run-logs" aria-live="polite">Waiting for output…</pre>
+    </div>
+    <footer class="modal-foot">
+      <button class="btn ghost" type="button" id="run-close-foot">Close</button>
+      <button class="btn secondary" type="button" id="run-refresh">Refresh status</button>
+    </footer>
+  </section>
+
+  <div class="modal-backdrop" id="auth-backdrop" hidden></div>
+  <section class="modal small" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title" hidden>
+    <header class="modal-head">
+      <div><p class="eyebrow">Protected dashboard</p><h2 id="auth-title">Enter access token</h2></div>
+    </header>
+    <p class="muted">This deployment has <code>WATCHDOG_UI_TOKEN</code> configured. The token is kept in this browser tab only.</p>
+    <form id="auth-form" class="auth-form">
+      <label class="field">
+        <span>Dashboard token</span>
+        <input type="password" id="auth-token" autocomplete="current-password" placeholder="Paste the token…" required>
+      </label>
+      <button class="btn primary" type="submit">Unlock dashboard</button>
+    </form>
+    <p class="form-error" id="auth-error" hidden></p>
+  </section>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+</body>
+</html>

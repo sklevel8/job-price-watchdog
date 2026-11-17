@@ -40,7 +40,9 @@ _CHANNELS = ("discord", "telegram", "console")
 _SOURCE_LABELS = {
     "remoteok": "Remote OK",
     "hn": "Hacker News",
+    "greenhouse": "Greenhouse",
     "books": "Books to Scrape",
+    "steam": "Steam",
 }
 
 

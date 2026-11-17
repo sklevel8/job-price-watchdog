@@ -1,14 +1,21 @@
 # Job / Price Watchdog
 
-A serverless ETL watchdog written in Python. It periodically extracts remote
-jobs and product prices, normalizes messy real-world data, stores history in
-SQLite, and sends deduplicated alerts to Discord and/or Telegram. GitHub Actions
-provides the free cron scheduler — no server required.
+A serverless ETL watchdog written in Python. It periodically extracts South
+African tech jobs and rand-denominated product prices, normalizes messy
+real-world data, stores history in SQLite, and sends deduplicated alerts to
+Discord and/or Telegram. GitHub Actions provides the free cron scheduler — no
+server required.
 
 The project is intentionally built like a small production pipeline rather than
 a demo script: strict configuration validation, retries with backoff, per-host
 rate limiting, exact `Decimal` money handling, idempotent alerts, per-channel
 retry queues, structured reports, and meaningful CI exit codes.
+
+The serverless workflow stays the primary deployment mode. An **optional web
+dashboard** (Flask + Waitress) adds a human-friendly way to inspect runs,
+listings, price history, and the alert ledger, edit the YAML config safely, and
+trigger dry or live runs from a browser. It is not required by the cron job and
+adds no dependencies to the scheduled ETL.
 
 ---
 
@@ -25,15 +32,16 @@ GitHub Actions cron (every 6 hours)
         │
         ▼
   Portable ledger + JSON/Markdown reports + GitHub job summary
+
+Optional web dashboard ──► inspect runs/listings/alerts, edit config, trigger runs
 ```
 
-Included live sources:
+Included live sources (South African configuration):
 
 | Source | Type | Format | Notes |
 | --- | --- | --- | --- |
-| [Remote OK](https://remoteok.com/api) | Jobs | JSON API | Salary fields, tags, remote flag. Attribution required by their API terms. |
-| [HN Algolia](https://hn.algolia.com/api) | Jobs | JSON API | Searches Hacker News job stories by query/tag. |
-| [Books to Scrape](https://books.toscrape.com/) | Prices | HTML | Public scraping sandbox; demonstrates catalogue pagination and mojibake repair. |
+| [Greenhouse](https://boards-api.greenhouse.io/v1/boards/ozow/jobs) | Jobs | JSON API | Public job boards for South African employers (Ozow, Entersekt, Luno). Keyless. |
+| [Steam app details](https://store.steampowered.com/api/appdetails) | Prices | JSON API | No key required; South African store prices in **ZAR** (`cc=za`), discounts, and free-to-play detection. |
 | Any static product page | Prices | HTML + CSS selectors | Configure `generic_html` with item/title/price selectors. |
 
 ---
@@ -46,7 +54,7 @@ Included live sources:
   per-host minimum delay, response-size limits, and a 2,000-listing cap.
 - **Real normalization** — currency symbols/codes, thousands separators,
   price ranges, salary annualization, ISO/RFC/relative dates, HTML entities,
-  and cp1252→UTF-8 mojibake repair (needed by the Books to Scrape fixture).
+  and cp1252→UTF-8 mojibake repair.
 - **Exact money** — prices and salaries are stored as decimal text, never
   binary floats.
 - **Idempotent alerting** — a SQLite ledger keyed by
@@ -61,7 +69,10 @@ Included live sources:
   partial runs still export state and reports.
 - **Observability** — human or JSON logs, per-rule counters, JSON reports,
   Markdown summaries, and GitHub Actions artifacts.
-- **Tested** — 225 offline tests, 88% branch coverage, Ruff lint/format, and
+- **Optional dashboard** — a token-protected Flask UI/API with live run logs,
+  searchable listings, price-history charts, the alert ledger, and a validated
+  YAML editor. Vanilla HTML/CSS/JS: no build step and no external assets.
+- **Tested** — 254 offline tests, ~88% branch coverage, Ruff lint/format, and
   Actionlint-validated workflows.
 
 ---
@@ -80,21 +91,25 @@ job-price-watchdog/
 ├── reports/                    # generated JSON/Markdown reports (ignored)
 ├── src/
 │   ├── config.py               # strict YAML loading/validation
-│   ├── database.py             # SQLite schema, history, alert ledger
+│   ├── database.py             # SQLite schema, history, alert ledger, read models
 │   ├── main.py                 # CLI entry point
 │   ├── models.py               # dataclasses, fingerprints, run reports
 │   ├── normalize.py            # text/price/salary/date/keyword helpers
 │   ├── notifier.py             # Discord, Telegram, console delivery
 │   ├── pipeline.py             # ETL orchestration, matching, retries
-│   └── scraper.py              # HTTP client and source parsers
+│   ├── scraper.py              # HTTP client and source parsers
+│   ├── webapp.py               # optional Flask dashboard + JSON API
+│   └── webui/                  # dashboard HTML/CSS/JS (no build step)
 ├── state/
 │   ├── README.md               # what is stored and what is gitignored
 │   └── watchdog.db             # created at runtime (ignored)
 ├── tests/                      # offline unit/integration tests + fixtures
 ├── .env.example
+├── Dockerfile                  # optional dashboard container
 ├── pyproject.toml              # pytest, coverage, ruff configuration
-├── requirements.txt
-├── requirements-dev.txt
+├── requirements.txt            # ETL runtime (lean, used by the cron job)
+├── requirements-web.txt        # ETL runtime + Flask + Waitress
+├── requirements-dev.txt        # web + test/lint tooling
 ├── LICENSE
 └── README.md
 ```
@@ -138,8 +153,8 @@ pip install -r requirements-dev.txt
 cp .env.example .env
 ```
 
-`requirements-dev.txt` includes the runtime dependencies plus pytest, coverage,
-and Ruff.
+`requirements-dev.txt` includes the ETL and web runtime dependencies plus
+pytest, coverage, and Ruff.
 
 ### 3. Preview against live data
 
@@ -165,6 +180,141 @@ python src/main.py
 
 With no credentials configured, alerts are printed to the log and recorded in
 the database so they are not repeated every run.
+
+---
+
+## Web dashboard (optional)
+
+The dashboard is a thin read/write layer over the same SQLite database and YAML
+config used by the CLI. It is designed for local use or a private network; it
+does **not** replace the GitHub Actions scheduler.
+
+### Features
+
+- **Overview** — totals, rule health, recent runs/alerts, channel status, and
+  the current price watch list.
+- **Runs** — every execution with totals, errors, and per-rule state. Start a
+  dry or live run and watch the live log stream in the browser.
+- **Listings** — search/filter jobs and products, open a detail drawer, and view
+  a price-history chart for tracked products.
+- **Alerts** — the idempotent delivery ledger, filterable by status, rule, and
+  channel.
+- **Configuration** — edit `config.yaml` in the browser. The same strict loader
+  validates it before anything is written.
+- **Responsive by default** — on first visit the dashboard uses **Auto** mode and
+  adapts to the viewport: phones get stacked panels, a two-up KPI grid, and
+  narrowed ledgers that drop low-priority columns instead of requiring a wide
+  horizontal pan; wider screens get the sidebar and multi-column overview. No
+  configuration or device detection is required, because the layout is driven by
+  CSS container queries.
+- **Adaptive navigation** — a grouped sidebar on wide screens becomes a fixed
+  bottom tab bar on phones. KPI cards, filters, tables, drawers, and modals share
+  the same paper-and-ink visual system: warm surfaces, mono metadata, hairline
+  borders, a safety-orange signal color, and matched light/dark themes.
+- **Layout preview** — optionally pin **Desktop** or preview a phone-width
+  **Mobile** frame with the switcher. Drawers and modals stay inside the phone
+  frame. The choice is remembered in the browser; choosing **Auto** restores
+  normal responsive behavior.
+
+### Run it locally
+
+Install the web extras, then start the server from the repository root:
+
+```powershell
+pip install -r requirements-web.txt
+python src/webapp.py --host 127.0.0.1 --port 8000
+```
+
+Open <http://127.0.0.1:8000/>. The server uses Waitress by default; pass
+`--debug` to use the Flask development server. CLI options:
+
+```text
+python src/webapp.py [--host HOST] [--port PORT] [--config PATH]
+                     [--db PATH] [--reports-dir PATH] [--debug] [--version]
+```
+
+The cron job only needs `requirements.txt`; Flask and Waitress live in
+`requirements-web.txt` and the optional `web` dependency group in
+`pyproject.toml`.
+
+### Authentication
+
+Set `WATCHDOG_UI_TOKEN` to require a shared token on every `/api/*` route
+(except `/api/health`). The browser stores it for the tab and sends it as
+`X-Watchdog-Token`; API clients may also use `Authorization: Bearer <token>`.
+The comparison is constant-time.
+
+```powershell
+$env:WATCHDOG_UI_TOKEN = "a-long-random-string"
+python src/webapp.py --host 0.0.0.0 --port 8000
+```
+
+If you bind to a non-loopback address without a token, the server logs a
+warning. Always set a token and put the dashboard behind TLS/reverse-proxy auth
+before exposing it to the internet. There is no multi-user account system.
+
+### Safety of config editing
+
+`POST /api/config/validate` parses the submitted YAML in a temporary sibling
+file and reports the resolved summary without touching the real config.
+`PUT /api/config` validates again, writes a `.bak` copy of the current file,
+then replaces the config atomically. Invalid edits are rejected with HTTP 422
+and the on-disk config is left untouched.
+
+### Run behavior
+
+- Only **one** run may execute at a time; a second request returns HTTP 409.
+- Dry runs use a temporary database and import a copy of the portable ledger,
+  so they never mark real listings as seen or send messages.
+- Live runs write to the configured database and can deliver alerts. The
+  dashboard always asks for confirmation first.
+- Logs are captured from the `watchdog` logger and polled by the UI. Runs are
+  isolated from request threads, so closing the browser does not cancel them.
+- Report output: live runs write `reports/latest.json`; dry runs write
+  `reports/dry-run-latest.json`, so previews never overwrite the last real
+  report.
+
+### JSON API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Liveness, version, and whether auth is required. |
+| `GET` | `/api/overview` | Summary, rules, recent runs/alerts, channels. |
+| `GET` | `/api/rules` | Rule definitions plus per-rule state. |
+| `GET` | `/api/runs` | Paginated run history. |
+| `GET` | `/api/runs/<id>` | One run with rule state. |
+| `GET` | `/api/listings` | Paginated, searchable listings (`kind`, `source`, `q`). |
+| `GET` | `/api/listings/<fingerprint>` | Listing detail and price history. |
+| `GET` | `/api/alerts` | Paginated ledger (`status`, `rule`, `channel`). |
+| `GET` | `/api/config` | Raw YAML, validity, and resolved summary. |
+| `POST` | `/api/config/validate` | Validate YAML without writing. |
+| `PUT` | `/api/config` | Validate, back up, and atomically save YAML. |
+| `POST` | `/api/run` | Start a run (`{"dry_run": true, "rules": []}`); defaults to dry run. |
+| `GET` | `/api/run/status` | Current run job, metrics, and logs. |
+
+All errors are JSON `{"error": "..."}` with an appropriate status code. API
+responses are sent with `Cache-Control: no-store`, and every response includes
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and a strict
+Content-Security-Policy.
+
+### Docker
+
+The included `Dockerfile` runs the dashboard as a non-root user with a
+healthcheck:
+
+```bash
+docker build -t watchdog-dashboard .
+docker run --rm -p 8000:8000 \
+  -e WATCHDOG_UI_TOKEN="a-long-random-string" \
+  -v "$PWD/state:/app/state" \
+  -v "$PWD/config:/app/config" \
+  watchdog-dashboard
+```
+
+Mount `state/` to keep run history and the alert ledger, and mount `config/`
+if you want edits to persist on the host. On Linux, make those directories
+writable by the container's unprivileged uid `10001`. The image listens on
+`0.0.0.0:8000` and exposes `/api/health` for orchestrators.
 
 ---
 
@@ -211,6 +361,9 @@ succeeds and Telegram fails, only Telegram is retried next run.
 | `WATCHDOG_DB_PATH` | No | Overrides the database path from YAML. |
 | `WATCHDOG_DRY_RUN` | No | `1/true/yes/on` forces dry-run mode. |
 | `WATCHDOG_LOG_LEVEL` | No | Default CLI log level (`INFO`). |
+| `WATCHDOG_UI_TOKEN` | No | Shared token required by the dashboard API. Set before exposing it. |
+| `WATCHDOG_UI_HOST` | No | Dashboard bind address (default `127.0.0.1`). |
+| `WATCHDOG_UI_PORT` | No | Dashboard port (default `8000`). |
 
 Secrets belong in `.env` locally and in **GitHub repository secrets** in CI.
 Never put webhook URLs or tokens in `config/config.yaml`.
@@ -277,13 +430,18 @@ like a new subscription.
 | --- | --- | --- |
 | `remoteok_json` | job | `format`, `url` |
 | `hn_algolia_json` | job | `format`, `url`, `params` |
+| `greenhouse_json` | job | `format`, `url`, `params` |
 | `books_toscrape` | price | `format`, `url`, `max_pages` |
+| `steam_appdetails` | price | `format`, `url`, `params` |
 | `generic_html` | price | `format`, `url`, `item_selector`, `title_selector`, `price_selector`, `link_selector` |
 
 - Only absolute `https://` URLs are accepted. Plain `http://` is allowed only
   for `localhost`/`127.0.0.1`/`::1` during local testing.
 - `params` must be a flat mapping of scalar query parameters.
 - `max_pages` is 1–10 and only applies to `books_toscrape`.
+- `steam_appdetails` requires `params.appids`, a comma-separated list of numeric
+  Steam app IDs (for example `"1086940,1145360"`), and accepts an optional
+  two-letter `params.cc` country code.
 - `generic_html` requires `item_selector`, `title_selector`, and
   `price_selector`; `link_selector` is optional.
 
@@ -305,22 +463,41 @@ like a new subscription.
 Salaries are annualized with standard full-time assumptions: 2,080 hours/year,
 52 weeks/year, 12 months/year, 260 days/year.
 
-### Example: job rule
+### Example: South African job rule
 
 ```yaml
-- name: remote-tech-jobs
+- name: ozow-jobs
   kind: job
   enabled: true
   source:
-    format: remoteok_json
-    url: https://remoteok.com/api
+    format: greenhouse_json
+    url: https://boards-api.greenhouse.io/v1/boards/ozow/jobs
   match:
-    keywords: [python, backend, platform, devops, sre, "site reliability"]
-    keyword_mode: any
-    exclude_keywords: [intern, internship, sales, recruiter]
-    include_description: false
-    remote_only: true
-    max_age_days: 14
+    keywords: []
+    exclude_keywords: [intern, internship]
+    max_age_days: 180
+  bootstrap: alert
+```
+
+Greenhouse uses one board per employer. Add another rule with a different
+`boards-api.greenhouse.io/v1/boards/<company>/jobs` URL to watch another
+South African company.
+
+### Example: live Steam price rule (South Africa)
+
+```yaml
+- name: steam-price-watch
+  kind: price
+  enabled: true
+  source:
+    format: steam_appdetails
+    url: https://store.steampowered.com/api/appdetails
+    params:
+      appids: "1086940,1091500,1245620"   # comma-separated Steam app IDs
+      cc: za                              # South African store / ZAR prices
+  match:
+    max_price: 800.00
+    currency: ZAR
   bootstrap: alert
 ```
 
@@ -337,8 +514,8 @@ Salaries are annualized with standard full-time assumptions: 2,080 hours/year,
     title_selector: "h1"
     price_selector: ".price_color"
   match:
-    max_price: 49.99
-    currency: GBP
+    max_price: 800.00
+    currency: ZAR
   bootstrap: suppress
 ```
 
@@ -494,8 +671,9 @@ in the Actions UI and in the job summary.
 
 `.github/workflows/ci.yml` runs on pushes to `main`, pull requests, and manual
 dispatch. It tests Python 3.11 and 3.13, runs Ruff lint/format checks, validates
-the sample config, and runs the full suite with an 85% coverage floor. Dependabot
-checks pip and GitHub Actions updates weekly.
+the sample config, and runs the full suite — including the dashboard tests —
+with an 85% coverage floor. Dependabot checks pip and GitHub Actions updates
+weekly.
 
 ---
 
@@ -568,15 +746,16 @@ calls are replaced with deterministic fakes.
 
 Current status:
 
-- **225 tests passing**
+- **254 tests passing**
 - **~88% branch coverage**
 - Ruff clean, formatted
 - Both workflows validated with Actionlint 1.7.12
 
 The suite covers normalization edge cases, strict config failures, all parsers
 and pagination, SQLite round-trips/ledger imports, Discord/Telegram retries and
-escaping, pipeline matching/price logic/bootstrap/retries, and the CLI's exit
-codes, artifacts, and dry-run isolation.
+escaping, pipeline matching/price logic/bootstrap/retries, the CLI's exit codes,
+artifacts, and dry-run isolation, plus the dashboard API, token auth, config
+validation/backup, read models, and the background run manager.
 
 ---
 
@@ -647,7 +826,7 @@ available.
 | Telegram `chat not found` | Add the bot to the chat and use the correct numeric chat ID (negative for channels/groups). |
 | Telegram `HTTP 400` with HTML error | A title may contain unsupported markup; the notifier escapes HTML, so report a repro if it persists. |
 | HN rule matches 0 | The query has no recent hits, or `max_age_days` is too strict. Widen the window or change `query`. |
-| Books prices look like `Â£51.77` | The source contains genuine mojibake; `clean_text` repairs cp1252→UTF-8 before parsing. |
+| Prices look like `Â£51.77` | The source contains genuine mojibake; `clean_text` repairs cp1252→UTF-8 before parsing. |
 | `unknown key` config error | Remove the typo; unknown keys are rejected by design. |
 | `url must use https` | Use HTTPS, or `http://localhost` for local tests. |
 | State resets in Actions | The cache was evicted or the run was a dry run. Check the workflow's restore/save logs and artifacts. |
@@ -668,10 +847,18 @@ available.
   timeouts, retries, and per-host request rates.
 - The config is trusted input. Do not let untrusted users edit source URLs or
   selectors, or the workflow could be used for SSRF-style requests.
-- Respect each site's terms and `robots.txt`. The included price target is a
-  purpose-built scraping sandbox. Remote OK's API terms require linking back to
-  the listing and mentioning Remote OK as the source; alerts link to the
-  original listing and label the source as **Remote OK**.
+- **Dashboard:** set `WATCHDOG_UI_TOKEN` before exposing it beyond localhost;
+  the shared token is compared in constant time and never logged. The app sends
+  security headers, denies framing, and stores the token only in the browser
+  tab. Config saves are validated, backed up, and written atomically. A live
+  run can send real alerts, so keep the dashboard behind TLS/reverse-proxy auth
+  and treat anyone with the token as an operator.
+- Respect each site's terms and `robots.txt`. The included price source uses
+  Valve's public Steam app-details API (South African store, `cc=za`) rather
+  than scraping the store front. If you enable the optional Remote OK source,
+  its API terms require linking back to the listing and mentioning Remote OK as
+  the source; alerts link to the original listing and label the source as
+  **Remote OK**.
 - SQLite files and reports may contain public job/product data. Review them
   before sharing artifacts from a private repository.
 
@@ -682,4 +869,4 @@ available.
 MIT — see [LICENSE](LICENSE).
 
 Remote OK is a trademark of its owner. This project is not affiliated with
-Remote OK, Hacker News, Y Combinator, or Books to Scrape.
+Remote OK, Hacker News, Y Combinator, Valve, or Steam.

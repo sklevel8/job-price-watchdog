@@ -24,15 +24,19 @@ ENV_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 SOURCE_FORMATS = {
     "remoteok_json",
     "hn_algolia_json",
+    "greenhouse_json",
     "books_toscrape",
+    "steam_appdetails",
     "generic_html",
 }
-JOB_FORMATS = {"remoteok_json", "hn_algolia_json"}
-PRICE_FORMATS = {"books_toscrape", "generic_html"}
+JOB_FORMATS = {"remoteok_json", "hn_algolia_json", "greenhouse_json"}
+PRICE_FORMATS = {"books_toscrape", "steam_appdetails", "generic_html"}
 ALLOWED_SOURCE_KEYS = {
     "remoteok_json": {"format", "url"},
     "hn_algolia_json": {"format", "url", "params"},
+    "greenhouse_json": {"format", "url", "params"},
     "books_toscrape": {"format", "url", "max_pages"},
+    "steam_appdetails": {"format", "url", "params"},
     "generic_html": {
         "format",
         "url",
@@ -418,6 +422,15 @@ def _parse_source(raw: object, context: str) -> SourceSettings:
         for field_name in ("item_selector", "title_selector", "price_selector"):
             if not getattr(source, field_name):
                 raise ConfigError(f"{context}.{field_name} is required for generic_html")
+    if source_format == "steam_appdetails":
+        app_ids = str(params.get("appids", "")).strip()
+        if not re.fullmatch(r"\d+(,\d+)*", app_ids):
+            raise ConfigError(
+                f"{context}.params.appids must be a comma-separated list of numeric app IDs"
+            )
+        country = params.get("cc")
+        if country is not None and not re.fullmatch(r"[A-Za-z]{2}", str(country).strip()):
+            raise ConfigError(f"{context}.params.cc must be a 2-letter country code")
     return source
 
 

@@ -83,12 +83,13 @@ def test_database_env_override(tmp_path: Path) -> None:
 def test_repository_sample_config_is_valid() -> None:
     config = load_config(REPO_ROOT / "config" / "config.yaml")
     assert {rule.name for rule in config.rules} == {
-        "remote-tech-jobs",
-        "hn-who-is-hiring",
-        "books-price-watch",
+        "ozow-jobs",
+        "entersekt-jobs",
+        "luno-jobs",
+        "steam-price-watch",
         "example-generic-product",
     }
-    assert len(config.enabled_rules) == 3
+    assert len(config.enabled_rules) == 4
 
 
 def test_rule_lookup(tmp_path: Path) -> None:
@@ -226,6 +227,38 @@ def test_price_rule_rejects_min_salary(tmp_path: Path) -> None:
     }
     with pytest.raises(ConfigError, match="min_salary is only valid for job rules"):
         load_config(write_config(tmp_path, data))
+
+
+def test_steam_appdetails_requires_app_ids(tmp_path: Path) -> None:
+    data = base_data()
+    data["rules"][0] = {
+        "name": "games",
+        "kind": "price",
+        "source": {
+            "format": "steam_appdetails",
+            "url": "https://store.steampowered.com/api/appdetails",
+            "params": {"cc": "us"},
+        },
+        "match": {"max_price": 60, "currency": "USD"},
+    }
+    with pytest.raises(ConfigError, match="appids"):
+        load_config(write_config(tmp_path, data))
+
+
+def test_steam_appdetails_accepts_app_ids(tmp_path: Path) -> None:
+    data = base_data()
+    data["rules"][0] = {
+        "name": "games",
+        "kind": "price",
+        "source": {
+            "format": "steam_appdetails",
+            "url": "https://store.steampowered.com/api/appdetails",
+            "params": {"appids": "1086940,1145360", "cc": "us"},
+        },
+        "match": {"max_price": 60, "currency": "USD"},
+    }
+    config = load_config(write_config(tmp_path, data))
+    assert config.rules[0].source.params["appids"] == "1086940,1145360"
 
 
 def test_generic_html_requires_selectors(tmp_path: Path) -> None:

@@ -11,6 +11,12 @@ dependencies = [
     "requests>=2.32,<3",
 ]
 
+[project.optional-dependencies]
+web = [
+    "flask>=3.0,<4",
+    "waitress>=3.0,<4",
+]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
